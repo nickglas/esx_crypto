@@ -3,9 +3,9 @@ USE essentialmode;
 CREATE TABLE IF NOT EXISTS `crypto_wallets`(
 	`address` varchar(255) NOT NULL,
 	
-	`btc`FLOAT(20)  ,
-	`eth`FLOAT(20)  ,
-	`ada`FLOAT(20)  ,
+	`btc`FLOAT(20) DEFAULT 0,
+	`eth`FLOAT(20) DEFAULT 0 ,
+	`ada`FLOAT(20) DEFAULT 0 ,
 
 	`pin` VARCHAR(50) ,
 	`secret` VARCHAR(300) ,
@@ -41,13 +41,16 @@ create table if not EXISTS `crypto_transactions`(
 	`id` INT NOT NULL AUTO_INCREMENT,
 	`fromWallet` VARCHAR(255) NOT NULL,
 	`toWallet` VARCHAR(255) NOT NULL,
-	`amount` float(50) NOT NULL,
+	`currencyAmount` float(50) NOT NULL,
+	`coinAmount` float(50) NOT NULL,
+	`coin` VARCHAR(50) NOT NULL,
 	`type` VARCHAR(255) NOT NULL,
-	`dateTime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`dateTime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY (`id`),
 	FOREIGN KEY (fromWallet) REFERENCES crypto_wallets(address),
 	FOREIGN KEY (toWallet) REFERENCES crypto_wallets(address),
-	FOREIGN KEY (type) REFERENCES crypto_transaction_types(type)
+	FOREIGN KEY (type) REFERENCES crypto_transaction_types(type),
+	FOREIGN KEY (coin) REFERENCES crypto_coins(id)
 
 ) ENGINE = InnoDB DEFAULT CHARSET = UTF8;
 

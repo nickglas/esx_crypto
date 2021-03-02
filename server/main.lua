@@ -294,9 +294,10 @@ ESX.RegisterServerCallback('esx_crypto:getAllCoins', function(source, cb)
   cb(coins)
 end)
 
-function insertTransaction(fromWallet,toWallet,amount,type)
-  local result = MySQL.Sync.fetchAll("INSERT INTO crypto_transactions(fromWallet,toWallet,amount,type) VALUES(@fWallet,@tWallet,@am,@typ)",
-  {["fWallet"] = fromWallet, ["tWallet"] = toWallet, ["am"] = amount, ["typ"] = type})
+function insertTransaction(fromWallet,toWallet,currAmount,coinAmount,coin,type)
+  print("inserting transaction with details: " .. fromWallet .. " " .. toWallet .. " " .. coin.id .. " " .. currAmount .. " " .. type)
+  local result = MySQL.Sync.fetchAll("INSERT INTO crypto_transactions(fromWallet,toWallet,currencyAmount,coinAmount,coin,type) VALUES(@fWallet,@tWallet,@currAm,@coinAm,@coin,@typ)",
+  {["fWallet"] = fromWallet, ["tWallet"] = toWallet, ["currAm"] = currAmount, ["coinAm"] = coinAmount, ["coin"] = coin.id, ["typ"] = type})
 end
 
 ESX.RegisterServerCallback('esx_crypto:buyCoin',function(source,cb,coin,amount)          
@@ -311,15 +312,18 @@ ESX.RegisterServerCallback('esx_crypto:buyCoin',function(source,cb,coin,amount)
     return
   end
 
-
-
   local coinAmount = calculateCoinAmount(amount, dbCoin)
   
-  
-
   addCoinsToWallet(wallet,dbCoin,coinAmount)
   removeMoneyFromBank(xPlayer, amount)
-  insertTransaction("BrokerWallet", wallet.address,amount,"BUY")
+  print("inserting transaction")
+
+  print(wallet.address)
+  print(amount)
+  print(coinAmount)
+  print(dbCoin.id)
+
+  insertTransaction("BrokerWallet", wallet.address,amount,coinAmount,dbCoin,"BUY")
 
   cb("Succesfully added " .. coinAmount .. " to wallet " .. wallet.address)
 end)
@@ -332,12 +336,6 @@ ESX.RegisterServerCallback('esx_crypto:sellCoin',function(source,cb,coin,amount)
   local wallet = getWalletFromSource(source)
   local db_amount = getWalletCoinAmount(coin,wallet)
 
-  print(dbCoin.id)
-  print(playerMoney)
-  print(wallet.address)
-  print(db_amount)
-  print(amount)
-
   if amount > db_amount then
     cb("You dont have " .. amount .. " " .. coin.id)
     return
@@ -347,10 +345,18 @@ ESX.RegisterServerCallback('esx_crypto:sellCoin',function(source,cb,coin,amount)
   print(amountOfMoney)
   removeCoinsFromWallet(wallet,coin,amount)
   addMoneyToBank(xPlayer, amountOfMoney)
-  insertTransaction(wallet.address,"BrokerWallet",amount,"SELL")
+  insertTransaction(wallet.address,"BrokerWallet",amountOfMoney,amount,dbCoin,"SELL")
 
 
   cb("Succesfully sold " .. amount .. " " .. coin.symbol)
+end)
+
+ESX.RegisterServerCallback("esx_crypto:getCoinAmount", function(source, cb, coin)
+  local wallet = getWalletFromSource(source)
+  print(wallet.address)
+  local coinAmount = getWalletCoinAmount(coin,wallet)
+  print(coinAmount)
+  cb(coinAmount)
 end)
 
 ESX.RegisterServerCallback('esx_crypto:checkWalletExistence',function(source,cb)          
@@ -455,12 +461,23 @@ function transferFunds(fromWalletAddress, toWalletAddress, coin, amount)
   end
 
   local  Twallet = getWallet(toWalletAddress)
-  insertTransaction(fromWalletAddress,toWalletAddress,amount,"TRANSFER")
+  insertTransaction(fromWalletAddress,toWalletAddress,0,amount,coin,"TRANSFER")
   removeCoinsFromWallet(Fwallet, coin, amount)
   addCoinsToWallet(Twallet, coin, amount)
 
   return "successfully transfered " .. amount .. " of " .. coin.symbol .. " to wallet " .. toWalletAddress
 end
+
+function notifyPlayer(message, playerid)
+  print("we got args " .. message .. " " .. playerid)
+  local player = ESX.GetPlayerFromId(playerid)
+  print("player job: " .. player.job.name)
+  TriggerClientEvent("notify", -1)
+end
+
+RegisterCommand("n", function(source)
+  notifyPlayer("test", source)
+end)
 
 function checkPin(wallet, pin)
   if wallet.pin == pin then 

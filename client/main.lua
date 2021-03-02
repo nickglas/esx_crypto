@@ -85,6 +85,13 @@ AddEventHandler("output", function (args)
   TriggerEvent("chatMessage", "[CRYPTO]", {0,255,0}, args)
 end)
 
+RegisterNetEvent("notify")
+AddEventHandler("notify", function (args)
+	print("called")
+	TriggerEvent('esx:showNotification', -1, "this is a test")
+	ESX.ShowAdvancedNotification("Broker", "Crypto transaction", "test", textureDict, iconType, flash, saveToBrief, hudColorIndex)
+	ESX.ShowNotification(msg, flash, saveToBrief, hudColorIndex)
+end)
 
 function openMainCryptoMenu()
 	menuOpen = true
@@ -373,29 +380,31 @@ end
 
 
 function openCryptoSellBuyCoinAction(coin)
-	ESX.UI.Menu.Open('dialog', GetCurrentResourceName(), 'sellCoinAction',
-  {
-    title = ('How much ' .. coin.id .. ' do you want to sell')
-  },
+	ESX.TriggerServerCallback('esx_crypto:getCoinAmount', function(coinAmount)
+		ESX.UI.Menu.Open('dialog', GetCurrentResourceName(), 'sellCoinAction',
+		{
+			title = ('How much ' .. coin.id .. ' do you want to sell'),
+			value = coinAmount
+		},
+			function(data, menu)
+				local amount = tonumber(data.value)
+				print(amount)
+				if amount == nil or amount <= 0 then
+					print("invalid amount")
+					ESX.ShowNotification('Invalid amount')
+				else
+	
+					ESX.TriggerServerCallback('esx_crypto:sellCoin', function(result)
+						ESX.ShowNotification(result)
+						restartMainMenu()
+					end , coin, amount)
+	
+				end
+			end,
 		function(data, menu)
-			local amount = tonumber(data.value)
-			print(amount)
-			if amount == nil or amount <= 0 then
-				print("invalid amount")
-				ESX.ShowNotification('Invalid amount')
-			else
-
-				ESX.TriggerServerCallback('esx_crypto:sellCoin', function(result)
-					print("test")
-					ESX.ShowNotification("test")
-					ESX.ShowNotification(result)
-				end , coin, amount)
-
-			end
-		end,
-  function(data, menu)
-    menu.close()
-  end)
+			menu.close()
+		end)
+	end, coin)
 end
 
 function openCheckPinMenu()
