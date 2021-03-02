@@ -1,0 +1,15 @@
+to use a float number we need to change the default behaviour of the esx_menu_dialog so we changed the behaviour
+
+the removed code is
+
+-- Is the submitted data a number?
+			if tonumber(data.value) ~= nil then
+
+				-- Round float values
+				data.value = ESX.Math.Round(tonumber(data.value))
+
+				-- Check for negative value
+				if tonumber(data.value) <= 0 then
+					post = false
+				end
+			end
