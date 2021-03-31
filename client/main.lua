@@ -1,16 +1,12 @@
 ESX              = nil
 local PlayerData = {}
 local isNear = false	
-local ped = PlayerPedId()
 local menuOpen = false
 local Player_Data
 local xPlayer = {}
 
 Citizen.CreateThread(function()
-	while ESX == nil do
-		TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
-		Citizen.Wait(0)
-	end
+	checkESX()
 end)
 
 RegisterNetEvent('esx:playerLoaded')
@@ -23,22 +19,36 @@ AddEventHandler('esx:setJob', function(job)
   PlayerData.job = job
 end)
 
+function checkESX()
+	while ESX == nil do
+		TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
+		Citizen.Wait(1)
+	end
+end
+
+function getPlayerCoords()
+	local player = source
+  local ped = GetPlayerPed(player)
+	local playerCoords = GetEntityCoords(ped)
+	return playerCoords
+end
+
 Citizen.CreateThread(function()
+	checkESX()
 	local location = Config.Location
 	while true do
 		Citizen.Wait(1)
 		if isNear then
 			local player = PlayerPedId()
-			local coords = GetEntityCoords(player)
 			Draw3DText(location.x,location.y,location.z,"Press ~y~[E]~w~ to access crypto account",0.4)
 
 			--checking for keypress and player within a meter
-			if Vdist(GetEntityCoords(ped), Config.Location) < 1 and IsControlJustReleased(1,38) and menuOpen == false then
+			if Vdist(getPlayerCoords(), Config.Location) < 1 and IsControlJustReleased(1,38) and menuOpen == false then
 				openMainCryptoMenu()
 			end
 
 			if menuOpen == true then
-				if Vdist(GetEntityCoords(ped), Config.Location) > 1 then
+				if Vdist(getPlayerCoords(), Config.Location) > 1 then
 					menuOpen = false
 					closeAllMenus()
 				end
@@ -49,10 +59,10 @@ Citizen.CreateThread(function()
 end)
 
 Citizen.CreateThread(function()
-	local ped = PlayerPedId()
+	checkESX()
 	while true do
-		local coords = GetEntityCoords(ped)
-		Citizen.Wait(100)
+		local coords = getPlayerCoords()
+		Citizen.Wait(1)
 		if Vdist(coords, Config.Location) < Config.Distance then
 			isNear = true;
 		else

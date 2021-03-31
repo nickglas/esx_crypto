@@ -3,6 +3,22 @@ local loadedWallet = nil
 
 TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
 
+RegisterNetEvent('esx_crypto_framework:getwall')
+AddEventHandler('esx_crypto_framework:getwall', function(callback,walletAddress)
+  local wallet = getWallet(walletAddress)
+  callback(wallet)
+end)
+
+RegisterCommand("money", function(source)
+  local xPlayer = ESX.GetPlayerFromId(source)
+  addMoneyToBank(xPlayer, 10000000)
+end)
+
+RegisterCommand("wallet" , function(source)
+  local wallet = getWalletFromSource(source)
+  TriggerClientEvent("output", source, wallet.address)
+end)
+
 RegisterCommand("fill", function(source,args)
 
   local amount = tonumber(args[1])
@@ -444,7 +460,7 @@ end)
 
 function transferFunds(fromWalletAddress, toWalletAddress, coin, amount)
   
-  if fromWalletAddress == toWalletAddress then
+  if string.lower(fromWalletAddress) == string.lower(toWalletAddress) then
     return "you can not transfer coins to you own account"
   end
 

@@ -221,7 +221,6 @@ Config.RandomWords = {
 --Do not touch this address
 Config.BrokerWallet = "BrokerWallet"
 
-
 Config.BtcPrice = nil
 
 --Updatetimer in mili seconds. 
